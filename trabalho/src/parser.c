@@ -5,35 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 
-
-
-/*static char * concat(int argc,char ** argv, int start,int end){
-    if(argc == 0) return NULL;
-    if(start < 0) start = 0;
-    int totalSize = 1;
-    
-    if(start == end) totalSize = strlen(argv[start]); 
-    else for(int i = start;i < end && i < argc;i++) totalSize += strlen(argv[i]) + 1;
-
-    char * string = malloc(sizeof(char) * totalSize);
-
-    int counter = start;
-
-    for(int i = 0; i < totalSize && counter <= end && counter < argc;){
-        for(int j = 0;j < strlen(argv[counter]);j++){
-            string[i] = argv[counter][j];
-            i++;
-        }
-        if(i+1 != totalSize) {
-            string[i] = ' ';
-            i++;
-        }
-        counter++;
-    }
-    string[totalSize] = '\0';
-    return string;
-}*/
-
 // Conta quantos comandos existem no pipeline passado como argumento
 int countCommands(const char *argv) {
     if (argv == NULL || argv[0] == '\0')
@@ -93,44 +64,26 @@ char ** parseMultipleCommands(const char * argv){
     return args;
 }
 
-void getReply(int fd,char * reply){
+// Corrigida e testada
+void getReply(int fd, char *reply) {
+    lseek(fd, 0, SEEK_SET);
+    char chunk[128 + 1];
+    int bytesRead;
+    int totalBytesRead = 0;
 
-    lseek(fd,0,SEEK_SET);
-    char buffer[BUFFERSIZE];
-
-    int offset = 0;
-    int n;
-
-    while((n = read(fd,buffer,BUFFERSIZE))){
-        offset += n;
-        snprintf(reply+offset,offset,"%s",buffer);
-    }
     
-}
+    while ((bytesRead = read(fd, chunk, 128)) > 0) {
+        // Terminar o chunk com \0
+        chunk[bytesRead] = '\0';
 
-/*
-int stringToInt(char * argv){
-    int result = 0;
-    int i = 0;
+        // Copiar o chunk para o Array de reposta
+        strcpy(reply + totalBytesRead, chunk);
 
-    // Check for negative sign
-    int sign = 1;
-    if (argv[0] == '-') {
-        sign = -1;
-        i = 1;
+        // Atualizar o total de bytes lidos
+        totalBytesRead += bytesRead;
     }
 
-    // Iterate through each character of the string and build the integer
-    for (; argv[i] != '\0'; i++) {
-        if (argv[i] >= '0' && argv[i] <= '9') {
-            result = result * 10 + (argv[i] - '0');
-        } else {
-            // Invalid character encountered
-            printf("Invalid character detected: %c\n", argv[i]);
-	    return -123;
-        }
+    if (bytesRead == -1) {
+        perror("Erro a ler o descritor de ficheiro");
     }
-
-    return result * sign;
 }
-*/

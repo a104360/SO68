@@ -1,3 +1,4 @@
+/*
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -41,7 +42,6 @@ char * parseCommand(int argc,char ** argv,int index){
     int last = getCommandEnd(argc,argv,index);
    char * command = NULL;
 }
-/*
 int main()
 {
     int start = -2;
@@ -138,6 +138,7 @@ static char * cmdtok(char * argv,int start,char * saveptr){
 }
 */
 
+/*
 static int howManyCommands(const char *argv) {
     if (argv == NULL || argv[0] == '\0')
         return 0;
@@ -196,4 +197,48 @@ int main(int argc, char **argv) {
         printf("%s\n", argv[3]); // Accessing argv[3] without checking argc
     }
     return 0;
+}
+*/
+
+
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+void getReply(int fd, char *reply) {
+    lseek(fd, 0, SEEK_SET);
+    char chunk[128 + 1];
+    int bytesRead;
+    int totalBytesRead = 0;
+
+    
+    while ((bytesRead = read(fd, chunk, 128)) > 0) {
+        // Terminar o chunk com \0
+        chunk[bytesRead] = '\0';
+
+        // Copiar o chunk para o Array de reposta
+        strcpy(reply + totalBytesRead, chunk);
+
+        // Atualizar o total de bytes lidos
+        totalBytesRead += bytesRead;
+    }
+
+    if (bytesRead == -1) {
+        perror("Erro a ler o descritor de ficheiro");
+    }
+}
+
+int main() {
+  int fd = open("testar", O_CREAT | O_RDONLY, 0666);
+
+  char factos[1000];
+
+  getReply(fd, factos);
+
+  printf("%s", factos);
+
+  close(fd);
+
+  return 0;
 }
