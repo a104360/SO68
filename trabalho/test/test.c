@@ -205,8 +205,74 @@ int main(int argc, char **argv) {
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
-void getReply(int fd, char *reply) {
+//----------------------------------------------------
+//----------------------------------------------------
+
+#include "../include/request.h"
+
+struct request {
+    int id;
+    int time;
+    Command * commands;
+    int argc;
+};
+
+Request * createRequest(int id,int time,Command * commands,int argc){
+    Request * request = malloc(sizeof(struct request));
+    request->id = id;
+    request->time = time;
+    request->argc = argc;
+    request->commands = malloc(sizeof(char *) * argc);
+    for(int i = 0;i < argc;i++){
+        request->commands[i] = strdup(commands[i]);        
+    }
+    return request;
+}
+
+int getRid(Request * request){
+    return request->id;
+}
+
+int getRtime(Request * request){
+    return request->time;
+}
+
+int getNCommands(Request * request){
+    return request->argc;
+}
+
+void destroyRequest(Request * request){
+    for(int i = 0;i < request->argc;i++){
+        free(request->commands[i]);
+        request->commands[i] = NULL;
+    }
+    free(request->commands);
+    request->commands = NULL;
+    free(request);
+    request = NULL;
+}
+
+int writeRequest(int fifo,Request * request){
+
+    if(fifo == -1) return -1;
+
+    if(write(fifo,request,sizeof(struct request)) == -1){
+        perror("Escrita falhada");
+        close(fifo);
+        return -1;
+    }
+
+    close(fifo);
+
+    return 0;
+}
+
+//----------------------------------------------------
+//----------------------------------------------------
+
+void getReply(int fd, char *reply,int size) {
     lseek(fd, 0, SEEK_SET);
     char chunk[128 + 1];
     int bytesRead;
@@ -218,7 +284,14 @@ void getReply(int fd, char *reply) {
         chunk[bytesRead] = '\0';
 
         // Copiar o chunk para o Array de reposta
-        strcpy(reply + totalBytesRead, chunk);
+        if(totalBytesRead <= size) strncpy(reply + totalBytesRead, chunk,strlen(chunk));
+        else{
+            char * resized = realloc(reply,2*size);
+            strcpy(resized,reply);
+            free(reply);
+            reply = resized;
+            strcpy(reply + totalBytesRead,chunk);
+        }
 
         // Atualizar o total de bytes lidos
         totalBytesRead += bytesRead;
@@ -230,15 +303,17 @@ void getReply(int fd, char *reply) {
 }
 
 int main() {
-  int fd = open("testar", O_CREAT | O_RDONLY, 0666);
+    const char * string = "input para teste\n";
+    // Open file with write permission (create if it doesn't exist).
+    int fd = open("int.txt", O_CREAT | O_WRONLY,0666);
+    int myInt = 42; // Your integer value
 
-  char factos[1000];
+    if (fd != -1) {
+        write(fd, &myInt, sizeof(myInt));
+        close(fd);
+    }
 
-  getReply(fd, factos);
+    
 
-  printf("%s", factos);
-
-  close(fd);
-
-  return 0;
+    return 0;
 }
