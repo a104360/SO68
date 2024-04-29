@@ -1,4 +1,3 @@
-/*
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -42,6 +41,7 @@ char * parseCommand(int argc,char ** argv,int index){
     int last = getCommandEnd(argc,argv,index);
    char * command = NULL;
 }
+/*
 int main()
 {
     int start = -2;
@@ -138,7 +138,6 @@ static char * cmdtok(char * argv,int start,char * saveptr){
 }
 */
 
-/*
 static int howManyCommands(const char *argv) {
     if (argv == NULL || argv[0] == '\0')
         return 0;
@@ -196,124 +195,5 @@ int main(int argc, char **argv) {
     if (argc == 3) {
         printf("%s\n", argv[3]); // Accessing argv[3] without checking argc
     }
-    return 0;
-}
-*/
-
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-
-//----------------------------------------------------
-//----------------------------------------------------
-
-#include "../include/request.h"
-
-struct request {
-    int id;
-    int time;
-    Command * commands;
-    int argc;
-};
-
-Request * createRequest(int id,int time,Command * commands,int argc){
-    Request * request = malloc(sizeof(struct request));
-    request->id = id;
-    request->time = time;
-    request->argc = argc;
-    request->commands = malloc(sizeof(char *) * argc);
-    for(int i = 0;i < argc;i++){
-        request->commands[i] = strdup(commands[i]);        
-    }
-    return request;
-}
-
-int getRid(Request * request){
-    return request->id;
-}
-
-int getRtime(Request * request){
-    return request->time;
-}
-
-int getNCommands(Request * request){
-    return request->argc;
-}
-
-void destroyRequest(Request * request){
-    for(int i = 0;i < request->argc;i++){
-        free(request->commands[i]);
-        request->commands[i] = NULL;
-    }
-    free(request->commands);
-    request->commands = NULL;
-    free(request);
-    request = NULL;
-}
-
-int writeRequest(int fifo,Request * request){
-
-    if(fifo == -1) return -1;
-
-    if(write(fifo,request,sizeof(struct request)) == -1){
-        perror("Escrita falhada");
-        close(fifo);
-        return -1;
-    }
-
-    close(fifo);
-
-    return 0;
-}
-
-//----------------------------------------------------
-//----------------------------------------------------
-
-void getReply(int fd, char *reply,int size) {
-    lseek(fd, 0, SEEK_SET);
-    char chunk[128 + 1];
-    int bytesRead;
-    int totalBytesRead = 0;
-
-    
-    while ((bytesRead = read(fd, chunk, 128)) > 0) {
-        // Terminar o chunk com \0
-        chunk[bytesRead] = '\0';
-
-        // Copiar o chunk para o Array de reposta
-        if(totalBytesRead <= size) strncpy(reply + totalBytesRead, chunk,strlen(chunk));
-        else{
-            char * resized = realloc(reply,2*size);
-            strcpy(resized,reply);
-            free(reply);
-            reply = resized;
-            strcpy(reply + totalBytesRead,chunk);
-        }
-
-        // Atualizar o total de bytes lidos
-        totalBytesRead += bytesRead;
-    }
-
-    if (bytesRead == -1) {
-        perror("Erro a ler o descritor de ficheiro");
-    }
-}
-
-int main() {
-    const char * string = "input para teste\n";
-    // Open file with write permission (create if it doesn't exist).
-    int fd = open("int.txt", O_CREAT | O_WRONLY,0666);
-    int myInt = 42; // Your integer value
-
-    if (fd != -1) {
-        write(fd, &myInt, sizeof(myInt));
-        close(fd);
-    }
-
-    
-
     return 0;
 }

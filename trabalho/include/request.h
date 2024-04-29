@@ -11,6 +11,7 @@ typedef struct request Request;
 /// @param  time referencia temporal para a resposta do servidor
 /// @param  argv array de argumentos passados ao cliente pelo utilizador
 /// @param  argc numero de elementos do array de argumentos
+/// @note O valor do argc não deve incluir o NULL
 /// @return Pointer para o request criado
 Request *createRequest(int, int,Command *, int);
 
@@ -38,8 +39,18 @@ int getNCommands(Request *);
 /// @param  request Pointer para o request
 void destroyRequest(Request *);
 
+/// @brief Printa o Request no standard output
+/// @param  request Pointer para o Request a ser impresso
+void printRequest(Request *);
+
 /// @brief Função para enviar o request para um fifo
-/// @param  fifo File descriptor do fifo para o qual o Request vai ser escrito
+/// @param  fifo Nome do ficheiro para o qual vai ser escrito o Request
 /// @param  request Pointer para o Request a ser escrito no fifo
 /// @return 0 -> sucesso || -1 -> erro
-int writeRequest(int,Request *);
+int writeRequest(const char *,Request *);
+
+/// @brief Obtém o request armazenado no ficheiro, num index arbitrário
+/// @param  filename Nome do ficheiro de onde se vai ler o request
+/// @param  index Posicao no ficheiro de onde se vai ler o request
+/// @return Pointer para o request armazenado no ficheiro
+Request * readRequest(const char *,int);

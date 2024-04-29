@@ -65,16 +65,17 @@ static int openFifo(char * nome){
 /// @param clientID Id do client que efetuou o request
 /// @return Pointer para o nome lido do fifo de resposta
 static char * readReply(int clientID){
-	char * nomeReply[25]; // = malloc(sizeof("../tmp/replyTo_") + sizeof(int));
+	char * reply;
+
+}
+
+static void readReply(int clientID){
+	char * nomeReply;
 	nomeReplyFifo(clientID,nomeReply);
 
 	int replyfd = open(nomeReply,O_RDONLY);
 
-	char * reply;
-	getReply(replyfd,reply);
-	close(replyfd);
-
-	return reply;
+	while	
 }
 
 
