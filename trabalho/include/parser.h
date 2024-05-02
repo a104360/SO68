@@ -1,27 +1,40 @@
+#ifndef PARSER_H
+#define PARSER_H
+
+
 #define EXECUTE 5
 #define STATUS 2
 
 #define BUFFERSIZE 128
 
-/// @brief Faz parse de um unico comando
-/// @param  argv Comando passado pelo stdin do client
-/// @return Pointer para a string do comando do argumento
-char * parseUniqueCommand(const char *);
+typedef char * Command;
+typedef Command * Query;
 
-/// @brief Faz parse de multiplos comandos  
-/// @param  args String da pipeline de comandos a executar
-/// @return Array de comandos a executar
-char ** parseMultipleCommands(const char *);
 
-//int stringToInt(char *);
 
-/// @brief Lê a reply do orquestrador para a string passada
-/// @param  fd File descriptor do fifo
-/// @param  reply Pointer para onde vai ser passado o reply
-void getReply(int,char *);
+/// @brief Adaptação da strtok para separar os argumentos de um comando
+/// @param  cmd Pointer para um comando passado a um 
+/// @return Pointer para um array de comandos (Query) para ser passada a um execvp
+Query cmdTok(const char *);
+
+/// @brief Parse de um pipe de comandos de qualquer tamanho
+/// @param  cmdPipe Argumento passado pelo utilizador 
+/// @return Pointer para um array de queries
+Query * parsePipe(const char *); 
 
 /// @brief Conta quantos comandos existem no argumento passado 
 /// ao cliente
 /// @param  argv Argumento com comandos passado ao cliente pelo utilizador
 /// @return Nº de comandos presentes no argumento
 int countCommands(const char *);
+
+/// @brief Printa a query no ecrâ
+/// @param  Query Pointer para array de comandos
+void printQuery(Query);
+
+
+/// @brief Liberta memória detida por uma query
+/// @param  Query Pointer para o array de comandos a ser libertados
+void freeQuery(Query);
+
+#endif

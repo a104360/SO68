@@ -6,131 +6,100 @@
 #include <stdio.h>
 
 
-
-/*static char * concat(int argc,char ** argv, int start,int end){
-    if(argc == 0) return NULL;
-    if(start < 0) start = 0;
-    int totalSize = 1;
-    
-    if(start == end) totalSize = strlen(argv[start]); 
-    else for(int i = start;i < end && i < argc;i++) totalSize += strlen(argv[i]) + 1;
-
-    char * string = malloc(sizeof(char) * totalSize);
-
-    int counter = start;
-
-    for(int i = 0; i < totalSize && counter <= end && counter < argc;){
-        for(int j = 0;j < strlen(argv[counter]);j++){
-            string[i] = argv[counter][j];
-            i++;
-        }
-        if(i+1 != totalSize) {
-            string[i] = ' ';
-            i++;
-        }
-        counter++;
+int countCommands(const char * cmd){
+    if(!cmd || cmd[0] == '\0') return 0;
+    int count = 1;
+    for(int i = 0;cmd[i] != '\0';i++){
+        if(cmd[i] == '|' && cmd[i+1] >= ' ' && cmd[i+1] <= '~') 
+            count++;
     }
-    string[totalSize] = '\0';
-    return string;
-}*/
-
-// Conta quantos comandos existem no pipeline passado como argumento
-int countCommands(const char *argv) {
-    if (argv == NULL || argv[0] == '\0')
-        return 0;
-    int count = 0;
-    char *copy = strdup(argv);
-    char *saveptr = NULL;
-    char *token = strtok_r(copy, "|", &saveptr);
-    while (token) {
-        count++;
-        token = strtok_r(NULL, "|", &saveptr);
-    }
-    free(copy);
     return count;
 }
 
-// Apresenta o comando na posicao N da pipeline de comandos
-static int getIndexNCommand(const char *argv, int n) {
-    if (n == 0)
-        return 0;
-    int size = strlen(argv);
-    int count = 0;
-    int i = 0;
-    for (; i < size && count != n && argv[i] != '\0'; i++) {
-        if (argv[i] == '|')
-            count++;
-    }
-    if (argv[i] == '\0') // Correct the condition to check for end of string
-        return 0;
-    return i + 1;
-}
-
-// Separa cada comando do pipeline por ordem 
-static char *cmdtok(const char *argv, int start, char *saveptr) {
-    if (argv == NULL)
-        return NULL;
-    char *copy = strdup(argv + start); // Start from the given position
-    if (saveptr == NULL)
-        return strtok_r(copy, "|", &saveptr);
-    saveptr = saveptr + 1;
-    return strtok_r(NULL, "|", &saveptr);
-}
-
-
-char * parseUniqueCommand(const char * argv){
-    return strdup(argv);
-}
-
-char ** parseMultipleCommands(const char * argv){
-    if(argv == NULL) return NULL;
-    int max = countCommands(argv);
-    char ** args = malloc(sizeof(char *) * max);
-    char * saveptr = NULL;
-    for(int i = 0;i < max;i++){
-        args[i] = cmdtok(argv,getIndexNCommand(argv,i),saveptr);
-    }
-    return args;
-}
-
-void getReply(int fd,char * reply){
-
-    lseek(fd,0,SEEK_SET);
-    char buffer[BUFFERSIZE];
-
-    int offset = 0;
-    int n;
-
-    while((n = read(fd,buffer,BUFFERSIZE))){
-        offset += n;
-        snprintf(reply+offset,offset,"%s",buffer);
-    }
-    
-}
-
-/*
-int stringToInt(char * argv){
-    int result = 0;
-    int i = 0;
-
-    // Check for negative sign
-    int sign = 1;
-    if (argv[0] == '-') {
-        sign = -1;
-        i = 1;
-    }
-
-    // Iterate through each character of the string and build the integer
-    for (; argv[i] != '\0'; i++) {
-        if (argv[i] >= '0' && argv[i] <= '9') {
-            result = result * 10 + (argv[i] - '0');
-        } else {
-            // Invalid character encountered
-            printf("Invalid character detected: %c\n", argv[i]);
-	    return -123;
+static int countTokens(const char * cmd){
+    if(!cmd || cmd[0] == '\0') return 0;
+    int count = 1;
+    short first = 0;
+    for(int i = 0;cmd[i] != '\0' && cmd[i] != '|' && cmd[i+1] != '|';i++){
+        if(cmd[i] == ' '){
+            if(first == 0) continue;
+            if(cmd[i+1] > ' ' && cmd[i+1] <= '~')
+                count++;
+            continue;
+        }
+        if(first == 0){
+            first = 1;
         }
     }
-
-    return result * sign;
+    return count;
 }
-*/
+
+
+
+char ** cmdTok(const char * cmd){
+    if(!cmd || cmd[0] == '\0') return NULL;
+    char * copy = strdup(cmd);
+    char * token = NULL;
+    char * saveptr = copy;
+    
+    int size = countTokens(cmd) + 1;
+    
+    char ** arraycmds = malloc(sizeof(char *) * size);
+    
+    token = strtok_r(copy," |\0",&saveptr);
+    
+    arraycmds[0] = strdup(token);
+    
+    for(int i = 1;i < size-1;i++){
+        token = strtok_r(NULL," |\0",&saveptr);
+        if(token == NULL && i < size - 1) token = strtok_r(NULL," |\0",&saveptr);
+        arraycmds[i] = strdup(token);
+    }
+    
+    if(copy) free(copy);
+    arraycmds[size - 1] = NULL;
+    return arraycmds;
+}
+
+char *** parsePipe(const char * cmdPipe){
+    if(!cmdPipe || (cmdPipe[0] < ' ' || cmdPipe[0] > '~')) return NULL;
+    
+    char * cmdPipeCopy = strdup(cmdPipe);
+    char * cmdPipeToken = NULL;
+    char * saveptr = cmdPipeCopy;
+    int parseArraySize = countCommands(cmdPipe) + 1; // Determinar quantos comandos vao ser executados
+    
+    char *** parseArray = malloc(sizeof(char **) * parseArraySize);
+    
+    cmdPipeToken = strtok_r(cmdPipeCopy,"|\0\n",&saveptr);
+
+     parseArray[0] = cmdTok(cmdPipeToken);
+    
+    // Ciclo itera por quantos comandos houver
+    for(int i = 1;i < parseArraySize;i++){
+        cmdPipeToken = strtok_r(NULL,"|\0\n",&saveptr);
+        parseArray[i] = cmdTok(cmdPipeToken);
+    }
+    if(cmdPipeCopy) free(cmdPipeCopy);
+    parseArray[parseArraySize - 1] = NULL;
+    return parseArray;
+}
+
+void printQuery(Query cmd){
+    int i = 0;
+    while(cmd[i] != NULL){
+        printf("%s ",cmd[i]);
+        i++;
+    }
+    putchar('\n');
+}
+
+
+void freeQuery(Query tok) {
+    int i = 0;
+    while(tok[i]){
+        free(tok[i]);
+        i++;
+    }
+    free(tok);
+}

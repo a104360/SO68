@@ -1,7 +1,11 @@
+#ifndef REQUEST_H
+#define REQUEST_H
+
+#include "parser.h"
+
 #define EXECUTE 5
 #define STATUS 2
-
-typedef char * Command;
+#define REQUESTMAXSIZE 300
 
 /// @brief Struct para definir um pedido do cliente
 typedef struct request Request;
@@ -13,7 +17,18 @@ typedef struct request Request;
 /// @param  argc numero de elementos do array de argumentos
 /// @note O valor do argc não deve incluir o NULL
 /// @return Pointer para o request criado
-Request *createRequest(int, int,Command *, int);
+Request *createRequest(int, int,Command);
+
+
+/// @brief Setter id do pedido
+/// @param  request Pointer para o request
+/// @param  id Id a ser inserido
+void setRid(Request *,int);
+
+/// @brief Setter tempo do pedido
+/// @param  request Pointer para o request 
+/// @param  time Tempo
+void setRtime(Request *, int);
 
 /// @brief Getter id pedido
 /// @param  request Pointer para o request
@@ -25,15 +40,11 @@ int getRid(Request *);
 /// @return Tempo de referencia em milisegundos
 int getRtime(Request *);
 
-/// @brief Getter dos comandos
-/// @param  request Pointer para o request
-/// @return Array com os comandos a executar
-char ** getCommands(Request *);
 
-/// @brief Getter numero de comandos
+/// @brief Getter comando enviado no request
 /// @param  request Pointer para o request
-/// @return Número de comandos a executar no pedido
-int getNCommands(Request *);
+/// @return Cópia do comando guardado no request
+char * getRCommand(Request *);
 
 /// @brief Função de desalocação de memória para o request
 /// @param  request Pointer para o request
@@ -53,4 +64,7 @@ int writeRequest(const char *,Request *);
 /// @param  filename Nome do ficheiro de onde se vai ler o request
 /// @param  index Posicao no ficheiro de onde se vai ler o request
 /// @return Pointer para o request armazenado no ficheiro
+/// @note Se o index for -1, não é ignorado as posição onde se vai ler
 Request * readRequest(const char *,int);
+
+#endif
