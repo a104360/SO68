@@ -50,7 +50,7 @@ int main(int argc,char ** argv){
 		}
 
 		// Sucesso
-		printf("Request do client %d foi escrito com sucesso",id);
+		printf("Request do client %d foi escrito com sucesso\n",id);
 
 		// Ler IDreply
 		//char * cIdFifo = nameFifo(id);

@@ -77,12 +77,20 @@ static void skipToN(int fd,int index){
 Request * readRequest(const char * filename,int index){
     int fd = open(filename,O_RDONLY);
     
+    if(fd == -1){
+        perror("o ficheiro não foi corretamente aberto\n");
+        return NULL;
+    }
+    
     // skipar para a posicao desejada
-    if(index >= 0) skipToN(fd,index);
+    //if(index >= 0) skipToN(fd,index);
     
     Request * r = malloc(sizeof(struct request));
-    
-    read(fd,r,sizeof(struct request));
+    printf("alocou  \n");
+    if(read(fd,r,sizeof(struct request)) == -1){
+        perror("EOF encontrado");
+        return NULL;
+    }
 
     close(fd);
     

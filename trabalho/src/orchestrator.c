@@ -11,18 +11,14 @@ int main(){
 
     // INICIAR ARMAZENAMENTO DE REQUESTS
 
-    int fd = open(fifoComun,O_RDONLY);
+    //lseek(fd,0,SEEK_SET);
 
-    lseek(fd,0,SEEK_SET);
-
-    Request * r = readRequest(fifoComun,-1);
-
+    Request * r = readRequest(fifoComun,0);
 
     printRequest(r);
 
     destroyRequest(r);
 
-    close(fd);
 
     // TER UM FIFO PARA LER OS REQUESTS
 
