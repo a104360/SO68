@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+/*
 struct node
 {
     int key;
@@ -169,3 +169,4 @@ void free_tree(node* p)
     free_tree(p -> right);
     free(p);
 }
+*/

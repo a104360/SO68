@@ -1,5 +1,5 @@
 #include "../include/request.h"
-#include "../collections/linkedList.h"
+#include "../include/linkedList.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -31,7 +31,7 @@ int main(int argc,char ** argv){
     int listenFifo = open(fifoComum,O_RDONLY);
 
     while(1){
-        read
+        //read
     }
 
     // TER UM FIFO PARA LER OS REQUESTS
@@ -46,7 +46,7 @@ int main(int argc,char ** argv){
 
     // VOLTAR A LER REQUESTS 
 
-    unlink(fifoComun);
+    unlink(fifoComum);
 
     return 0;
 }
