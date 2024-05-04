@@ -103,3 +103,25 @@ void freeQuery(Query tok) {
     }
     free(tok);
 }
+
+
+int writeTaskReport(int id,long time){
+    const char logFile = "../tmp/taskReport";
+
+    char line[25];
+    memset(line,'\0',15);
+    snprintf(line,15,"ID : %d\ntime : %ld\n",id,time);
+    
+    int fd = open(logFile,O_CREAT | O_WRONLY,0666);
+
+    lseek(fd,0,SEEK_END);
+
+    if(write(fd,line,25) == -1){
+        perror("Escrita no ficheiro falhou");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
+}

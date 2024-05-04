@@ -43,7 +43,7 @@ char * getRCommand(Request * request){
 }
 
 // Função não deixa memory leaks
-void destroyRequest(Request * request){
+void destroyRequest(void * request){
     free(request);
     request = NULL;
 }
@@ -86,7 +86,6 @@ Request * readRequest(const char * filename,int index){
     //if(index >= 0) skipToN(fd,index);
     
     Request * r = malloc(sizeof(struct request));
-    printf("alocou  \n");
     if(read(fd,r,sizeof(struct request)) == -1){
         perror("EOF encontrado");
         return NULL;
@@ -98,3 +97,21 @@ Request * readRequest(const char * filename,int index){
 }
 
 
+void * copyRequest(Request * request){
+    void * obj = malloc(sizeof(struct request));
+    Request * new = (Request *) obj;
+    new->id = request->id;
+    new->time = request->time;
+    strncpy(new->commands,request->commands,REQUESTMAXSIZE);
+    return obj;
+}
+
+
+int compareRequest(void *a,void *b){
+    Request * r1 = (Request *) a;
+    Request * r2 = (Request *) b;
+
+    if(r1->time == r2->time) return 0;
+
+    return r1->time > r2->time ? 1 : -1;
+}

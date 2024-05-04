@@ -1,0 +1,10 @@
+# Object files
+*.o
+obj/*
+
+# Binary files
+bin/*
+
+# vscode files
+.vscode/
+.vscode

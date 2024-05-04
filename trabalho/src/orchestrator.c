@@ -1,24 +1,38 @@
 #include "../include/request.h"
+#include "../collections/linkedList.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <sys/time.h>
 
-static const char clientID[] = "../tmp/clientID.qjm";
+static const char fifoComum[] = "../tmp/requestCenter";
 
-static const char fifoComun[] = "../tmp/requestCenter";
-
-int main(){
+int main(int argc,char ** argv){
 
     // INICIAR ARMAZENAMENTO DE REQUESTS
+    
+
+    // Inicializar o controlador
+    int fdController[2];
+    pipe(fdController);
+    if(fork() == 0){
+        LinkedList * queriesOnHold = createLinkedList();
+
+
+        _exit(0);
+    }
 
     //lseek(fd,0,SEEK_SET);
+    mkfifo(fifoComum,0666);
+    int listenFifo = open(fifoComum,O_RDONLY);
 
-    Request * r = readRequest(fifoComun,0);
-
-    printRequest(r);
-
-    destroyRequest(r);
-
+    while(1){
+        read
+    }
 
     // TER UM FIFO PARA LER OS REQUESTS
 
@@ -26,11 +40,13 @@ int main(){
 
     // ANALIZAR OU NAO O TEMPO DE CADA UM
 
-    // EXECUTAR 
+    // EXECUTAR
 
     // ESCREVER OS OUTPUTS
 
     // VOLTAR A LER REQUESTS 
+
+    unlink(fifoComun);
 
     return 0;
 }

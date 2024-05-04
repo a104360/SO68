@@ -37,4 +37,10 @@ void printQuery(Query);
 /// @param  Query Pointer para o array de comandos a ser libertados
 void freeQuery(Query);
 
+/// @brief Escreve as informações do final do request para 
+/// @param  
+/// @param  
+/// @return 
+int writeTaskReport(int,long);
+
 #endif

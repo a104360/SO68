@@ -14,10 +14,16 @@ typedef struct request Request;
 /// @param  id id do pedido
 /// @param  time referencia temporal para a resposta do servidor
 /// @param  argv array de argumentos passados ao cliente pelo utilizador
-/// @param  argc numero de elementos do array de argumentos
 /// @note O valor do argc não deve incluir o NULL
 /// @return Pointer para o request criado
 Request *createRequest(int, int,Command);
+
+/// @brief Função de desalocação de memória para o request
+/// @param  request Pointer para o request
+void destroyRequest(void *);
+
+
+
 
 
 /// @brief Setter id do pedido
@@ -46,9 +52,8 @@ int getRtime(Request *);
 /// @return Cópia do comando guardado no request
 char * getRCommand(Request *);
 
-/// @brief Função de desalocação de memória para o request
-/// @param  request Pointer para o request
-void destroyRequest(Request *);
+
+
 
 /// @brief Printa o Request no standard output
 /// @param  request Pointer para o Request a ser impresso
@@ -66,5 +71,16 @@ int writeRequest(const char *,Request *);
 /// @return Pointer para o request armazenado no ficheiro
 /// @note Se o index for -1, não é ignorado as posição onde se vai ler
 Request * readRequest(const char *,int);
+
+/// @brief Copia o request para um novo pointer
+/// @param  request Pointer para request 
+/// @return  p Pointer para onde vai ser copiado o request
+void * copyRequest(Request *);
+
+/// @brief Compara os tempos dos requests
+/// @param  r1 Pointer para um request
+/// @param  r2 Pointer para outro request
+/// @return r1 > r2 -> 1  |  r1 == r2 -> 0  |  r1 < r2 -> -1
+int compareRequest(void *,void *);
 
 #endif

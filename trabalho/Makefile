@@ -14,10 +14,10 @@ all: folders bin/client bin/orchestrator
 folders:
 	@mkdir -p src include obj bin tmp
 
-bin/orchestrator: obj/orchestrator.o obj/request.o obj/parser.o $(DEPS)
+bin/orchestrator: obj/orchestrator.o obj/request.o obj/parser.o #$(DEPS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-bin/client: obj/client.o obj/request.o obj/parser.o $(DEPS) #obj/client.o $(DEPS)
+bin/client: obj/client.o obj/request.o obj/parser.o #$(DEPS) #obj/client.o $(DEPS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 obj/%.o: src/%.c $(DEPS)
