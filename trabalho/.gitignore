@@ -1,9 +1,7 @@
 # Object files
 *.o
-obj/*.o
 
 # Binary files
-bin/*
 
 # vscode files
 .vscode/
