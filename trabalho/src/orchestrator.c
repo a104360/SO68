@@ -16,7 +16,7 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
 
     // INICIAR ARMAZENAMENTO DE REQUESTS
 
-    if(argc <= 1){
+    if(argc <= 2){
         perror("Parametros de inicialização inválidos");
         return -1;
     }
@@ -72,13 +72,16 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
                     char * command = getRCommand(request);
                     destroyRequest(request);
                     // Fazer parse ao pipeline de comandos a executar
-                    Query * argv = parsePipe(command);
+                    Query * queries = parsePipe(command);
                     if(command) free(command);
 
                     // Obter a designação do ficheiro de output
-                    char outputName[10];
-                    memset(outputName,'\0',10);
-                    snprintf(outputName,10,"%d",id);
+                    int argv1Size = strlen(argv[1]);
+                    int outputNameSize = 10 + argv1Size;
+                    char outputName[outputNameSize];
+                    memset(outputName,'\0',outputNameSize);
+                    if(argv[1][argv1Size-1] == '/')snprintf(outputName,outputNameSize,"%s%d",argv[1],id);
+                    else snprintf(outputName,outputNameSize,"%s/%d",argv[1],id);
 
 
                     // Abrir o ficheiro e verificar se não ocorreu erro
@@ -98,14 +101,14 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
 
                     if(fork() == 0){
                         // Executar o pipeline extensível
-                        execvp(argv[0][0],argv[0]);
+                        execvp(queries[0][0],queries[0]);
                         write(STDERR_FILENO,"Erro na execução do request\n",31);
-                        freeCmdPipeline(&argv);
+                        freeCmdPipeline(&queries);
                         _exit(-1);
                     }
 
                     // Libertar o pipeline;
-                    freeCmdPipeline(&argv);
+                    freeCmdPipeline(&queries);
 
                     wait(NULL); // Esperar que o processo termine
                     close(fdOutput);
