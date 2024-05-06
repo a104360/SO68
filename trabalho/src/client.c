@@ -38,15 +38,17 @@ int main(int argc,char ** argv){
 		}
 
 		char * reply = nameFifo(id);
+		mkfifo(reply,0666);
 		int fdReply = open(reply,O_RDONLY);
 		char * buffer = malloc(sizeof(char) * 25);
 		read(fdReply,buffer,25);
 		close(fdReply);
+		unlink(reply);
 		write(STDOUT_FILENO,buffer,25);
 		free(buffer);
 		free(reply);
 		// Sucesso
-		printf("Request do client %d foi escrito com sucesso\n",id);
+		//printf("Request do client %d foi escrito com sucesso\n",id);
 
 		// Ler IDreply
 		//char * cIdFifo = nameFifo(id);

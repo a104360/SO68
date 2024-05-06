@@ -128,11 +128,14 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
         while(1){
             Request * readBuffer;
             readBuffer = fdReadRequest(fdServerController[0]);
+            fdWriteRequest(fdControllerTasks[1],readBuffer);
             if(getRid(readBuffer) == -404){
-                fdWriteRequest(fdControllerTasks[1],readBuffer);
                 destroyRequest(readBuffer);
                 break;
             }
+            destroyRequest(readBuffer);
+
+
             // ADICIONAR CONDIÇÃO PARA ALTERAR A POLITICA
             //orderInsert(&queriesOnHold,readBuffer,compareRequest);
         }
@@ -152,19 +155,19 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
     close(fdServerController[0]);
     //lseek(fd,0,SEEK_SET);
     mkfifo(fifoComum,0666);
-    int listenFifo = open(fifoComum,O_RDONLY);
+    int listenFifo = open(fifoComum,O_RDWR);
 
-
+    // Ciclo eterno do servidor
     while(1){
+        // Ler um request do fifo
         Request * r = fdReadRequest(listenFifo);
+        // Guardar id do cliente
         int clientId = getRid(r);
         if(fork() == 0){
             char * reply = nameFifo(clientId);
-            mkfifo(reply,0666);
             int fdReply = open(reply,O_WRONLY);
             writeReply(fdReply,clientId);
             close(fdReply);
-            unlink(reply);
             free(reply);
             _exit(0);
         }

@@ -145,7 +145,7 @@ char * nameFifo(int pid){
 
 void writeReply(int fd,int id){
     char * resposta = malloc(sizeof(char) * 25);
-    snprintf(resposta,25,"REQUEST %d Received",id);
+    snprintf(resposta,25,"REQUEST %d Received\n",id);
     write(fd,resposta,25);
     free(resposta);
 }
