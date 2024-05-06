@@ -5,8 +5,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-static const char fifoComun[] = "../tmp/requestCenter";
-
 struct request {
     int id;
     int time;
@@ -18,6 +16,7 @@ Request * createRequest(int id,int time,Command commands){
     request->id = id;
     request->time = time;
     memset(request->commands,'\0',300);
+    if(!commands) return request;
     strncpy(request->commands,commands,300);
     return request;
 }
@@ -65,16 +64,21 @@ int writeRequest(const char * filename,Request * r){
     return 0;
 }
 
+int fdWriteRequest(int fd,Request * request){
+    if(write(fd,request,sizeof(struct request))==-1) return -1;
+    return 0;
+}
 
+/*
 // Função para navegar para o request no index arbitrário
 static void skipToN(int fd,int index){
     lseek(fd,0,SEEK_SET);
     for(int i = 0;i < index;i++){
         lseek(fd,sizeof(struct request),SEEK_CUR);
     }
-}
+}*/
 
-Request * readRequest(const char * filename,int index){
+Request * readRequest(const char * filename){
     int fd = open(filename,O_RDONLY);
     
     if(fd == -1){
@@ -96,6 +100,14 @@ Request * readRequest(const char * filename,int index){
     return r;
 }
 
+Request * fdReadRequest(int fd){    
+    Request * r = malloc(sizeof(struct request));
+    if(read(fd,r,sizeof(struct request)) == -1){
+        perror("EOF encontrado");
+        return NULL;
+    }
+    return r;
+}
 
 void * copyRequest(Request * request){
     void * obj = malloc(sizeof(struct request));

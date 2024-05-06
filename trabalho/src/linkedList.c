@@ -72,6 +72,7 @@ void orderInsert(LinkedList **l,void * obj,int (*cmp)(void *,void *)){
 }
 
 void * pop(LinkedList *l,void (*destroy)(void *)){
+    if(l->obj == NULL || l == NULL) return NULL;
     LinkedList * stream = l;
     while(stream->next->next != NULL){
         stream = stream->next;
@@ -90,6 +91,7 @@ void * pop(LinkedList *l,void (*destroy)(void *)){
 }
 
 void * popFront(LinkedList ** list,void(*destroy)(void*)){
+    if((*list)->obj == NULL || (*list) == NULL) return NULL;
     void * obj = copyRequest((Request *) (*list)->obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
     LinkedList * aux = (*list);
     (*list) = (*list)->next;

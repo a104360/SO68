@@ -105,12 +105,20 @@ void freeQuery(Query tok) {
 }
 
 
+void freeCmdPipeline(Query ** pipeline){
+    for(int i = 0;(*pipeline)[i];i++){
+        freeQuery((*pipeline)[i]);
+    }
+    free(*pipeline);
+    *pipeline = NULL;
+}
+
 int writeTaskReport(int id,long time){
-    const char logFile = "../tmp/taskReport";
+    const char logFile[] = "../tmp/taskReport";
 
     char line[25];
-    memset(line,'\0',15);
-    snprintf(line,15,"ID : %d\ntime : %ld\n",id,time);
+    memset(line,'\0',25);
+    snprintf(line,25,"ID : %d\ntime : %ld\n",id,time);
     
     int fd = open(logFile,O_CREAT | O_WRONLY,0666);
 
@@ -125,3 +133,20 @@ int writeTaskReport(int id,long time){
     close(fd);
     return 0;
 }
+
+char * nameFifo(int pid){
+	char * nome = malloc(sizeof(char) * REPLYSIZE);
+
+	snprintf(nome,REPLYSIZE,"../tmp/replyTo_%d",pid);
+
+	return nome;
+}
+
+
+void writeReply(int fd,int id){
+    char * resposta = malloc(sizeof(char) * 25);
+    snprintf(resposta,25,"REQUEST %d Received",id);
+    write(fd,resposta,25);
+    free(resposta);
+}
+

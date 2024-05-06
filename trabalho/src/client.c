@@ -9,27 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define REPLYSIZE 35
 
 static const char fifoComun[] = "../tmp/requestCenter";
-
-
-
-
-
-/// @brief Retorna o nome do fifo onde vai ser escrito o id do pedido
-/// @param pid Id do processo do cliente
-/// @return Pointer para o nome do fifo
-static char * nameFifo(int pid){
-	char * nome = malloc(sizeof(char) * REPLYSIZE);
-
-	snprintf(nome,REPLYSIZE,"../tmp/replyTo_%d",pid);
-
-	return nome;
-}
-
-
-
 
 
 
@@ -37,11 +18,18 @@ static char * nameFifo(int pid){
 int main(int argc,char ** argv){
 	switch (argc)
 	{
+	case 1:
+		Request * r = createRequest(-404,0,NULL);
+		if(writeRequest(fifoComun,r) == -1){
+			perror("O envio do request falhou");
+			return -1;
+		}
+		break;
 	case EXECUTE:
 		// ../tmp/ReplyTo_<PID>
 				
 		int id = getpid();
-		Request * r = createRequest(id,atoi(argv[2]),argv[4]);
+		r = createRequest(id,atoi(argv[2]),argv[4]);
 
 		// Sucesso no envido do request de execução	
 		if(writeRequest(fifoComun,r) == -1){
@@ -49,6 +37,14 @@ int main(int argc,char ** argv){
 			return -1;
 		}
 
+		char * reply = nameFifo(id);
+		int fdReply = open(reply,O_RDONLY);
+		char * buffer = malloc(sizeof(char) * 25);
+		read(fdReply,buffer,25);
+		close(fdReply);
+		write(STDOUT_FILENO,buffer,25);
+		free(buffer);
+		free(reply);
 		// Sucesso
 		printf("Request do client %d foi escrito com sucesso\n",id);
 

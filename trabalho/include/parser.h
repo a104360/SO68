@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#define REPLYSIZE 35
 
 #define EXECUTE 5
 #define STATUS 2
@@ -37,10 +38,24 @@ void printQuery(Query);
 /// @param  Query Pointer para o array de comandos a ser libertados
 void freeQuery(Query);
 
+/// @brief Liberta memória detida por um pipeline de comandos
+/// @param  pipeline Pointer para o array de Queries
+void freeCmdPipeline(Query **);
+
 /// @brief Escreve as informações do final do request para 
 /// @param  
 /// @param  
 /// @return 
 int writeTaskReport(int,long);
+
+/// @brief Retorna o nome do fifo onde vai ser escrito o id do pedido
+/// @param pid Id do processo do cliente
+/// @return Pointer para o nome do fifo
+char * nameFifo(int);
+
+/// @brief Escreve uma reply para o descritor, indicando o id
+/// @param  fd File descriptor do client
+/// @param  id Id do client
+void writeReply(int,int);
 
 #endif

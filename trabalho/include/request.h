@@ -59,18 +59,33 @@ char * getRCommand(Request *);
 /// @param  request Pointer para o Request a ser impresso
 void printRequest(Request *);
 
+void executeRequest(Request *);
+
 /// @brief Função para enviar o request para um fifo
 /// @param  fifo Nome do ficheiro para o qual vai ser escrito o Request
 /// @param  request Pointer para o Request a ser escrito no fifo
 /// @return 0 -> sucesso || -1 -> erro
 int writeRequest(const char *,Request *);
 
+
+/// @brief Função para enviar o request para um fifo já aberto
+/// @param  fd File descriptor 
+/// @param  request Pointer para o request a ser escrito
+/// @return 0 -> sucesso || -1 -> erro
+int fdWriteRequest(int,Request *);
+
 /// @brief Obtém o request armazenado no ficheiro, num index arbitrário
 /// @param  filename Nome do ficheiro de onde se vai ler o request
 /// @param  index Posicao no ficheiro de onde se vai ler o request
 /// @return Pointer para o request armazenado no ficheiro
 /// @note Se o index for -1, não é ignorado as posição onde se vai ler
-Request * readRequest(const char *,int);
+Request * readRequest(const char *);
+
+/// @brief Obtém o request armazenado no ficheiro, num index arbitrário
+/// @param  fd Descritor de ficheiro de onde se vai ler o request
+/// @return Pointer para o request armazenado no ficheiro
+/// @note Se o index for -1, não é ignorado as posição onde se vai ler
+Request * fdReadRequest(int);
 
 /// @brief Copia o request para um novo pointer
 /// @param  request Pointer para request 
