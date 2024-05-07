@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 struct request {
     int id;
@@ -38,6 +39,7 @@ int getRtime(Request * request){
 }
 
 char * getRCommand(Request * request){
+    if(request == NULL) return NULL;
     return strdup(request->commands);
 }
 
@@ -126,4 +128,59 @@ int compareRequest(void *a,void *b){
     if(r1->time == r2->time) return 0;
 
     return r1->time > r2->time ? 1 : -1;
+}
+
+
+void executeRequest(Request * request){
+    char * argv = getRCommand(request);
+    if(argv == NULL){
+        return;
+    }
+
+    int nCommands = countCommands(argv);
+    Query *commands = parsePipe(argv);
+    free(argv);
+
+    int oldPipe[2], newPipe[2];
+    // Para cada comando, executar o ciclo
+    for (int i = 0; i < nCommands; i++) {
+        // Em todos os comandos, anteriores ao ultimo, cria-se um pipe
+        if (i < nCommands - 1) {
+            pipe(newPipe);
+        }   
+
+        if (fork() == 0) {
+            if (i > 0) {  // Assim não executa o primeiro
+                dup2(oldPipe[0], STDIN_FILENO);
+                close(oldPipe[0]);
+                close(oldPipe[1]);
+            }
+            if (i < nCommands - 1) {  // Assim não vai executar o último comando
+                dup2(newPipe[1], STDOUT_FILENO);
+                close(newPipe[0]);
+                close(newPipe[1]);
+            }
+            execvp(commands[i][0], commands[i]);
+            perror("execvp falhou");
+            _exit(-1);
+        } // Adicionar aqui verificação de erro
+
+        // O pai fecha os file descriptors do pipe antigo
+        if (i > 0) {
+            close(oldPipe[0]);
+            close(oldPipe[1]);
+        }
+        // Para todos os comandos, exceto o último,
+        // cada descritor torna-se os respetivos novos descritores
+        if (i < nCommands - 1) {
+            oldPipe[0] = newPipe[0];
+            oldPipe[1] = newPipe[1];
+        }
+
+        // Espera para que o comando execute
+        wait(NULL);
+    }
+
+    // Libertar memória da Query
+    freeCmdPipeline(&commands);
 }

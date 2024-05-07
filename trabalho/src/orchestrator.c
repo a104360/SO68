@@ -68,12 +68,6 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
                         break;
                     }
                     
-                    // Obter a mensagem
-                    char * command = getRCommand(request);
-                    destroyRequest(request);
-                    // Fazer parse ao pipeline de comandos a executar
-                    Query * queries = parsePipe(command);
-                    if(command) free(command);
 
                     // Obter a designação do ficheiro de output
                     int argv1Size = strlen(argv[1]);
@@ -100,15 +94,12 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
 
 
                     if(fork() == 0){
-                        // Executar o pipeline extensível
-                        execvp(queries[0][0],queries[0]);
+                        executeRequest(request);
                         write(STDERR_FILENO,"Erro na execução do request\n",31);
-                        freeCmdPipeline(&queries);
                         _exit(-1);
                     }
 
                     // Libertar o pipeline;
-                    freeCmdPipeline(&queries);
 
                     wait(NULL); // Esperar que o processo termine
                     close(fdOutput);
