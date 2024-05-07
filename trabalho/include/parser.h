@@ -58,4 +58,8 @@ char * nameFifo(int);
 /// @param  id Id do client
 void writeReply(int,int);
 
+void writeTaskerStatus(int);
+
+char * intToString(int);
+
 #endif

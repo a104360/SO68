@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include "../include/request.h"
 #include "../include/linkedList.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 int main(){
 
-    Request * a = createRequest(1,1000,"Eu sou o paulo");
+    /*Request * a = createRequest(1,1000,"Eu sou o paulo");
     Request * b = createRequest(2,2000,"E eu sou a ticha");
     Request * c = createRequest(3,3000,"Eu sou o paulo");
     Request * d = createRequest(4,4000,"E eu sou a ticha");
@@ -18,7 +20,7 @@ int main(){
     insert(&db,d);
 
     destroyRequest((void *) popFront(&db,destroyRequest));
-    destroyRequest((void *) popFront(&db,destroyRequest));*/
+    destroyRequest((void *) popFront(&db,destroyRequest));/
 
     orderInsert(&db,NULL,compareRequest);
     orderInsert(&db,a,NULL);
@@ -27,7 +29,7 @@ int main(){
     /*orderInsert(&db,d,compareRequest);
     orderInsert(&db,b,compareRequest);
     orderInsert(&db,a,compareRequest);
-    orderInsert(&db,c,compareRequest);*/
+    orderInsert(&db,c,compareRequest);/
 
     destroyRequest(a);
     destroyRequest(b);
@@ -36,8 +38,26 @@ int main(){
 
     printLinkedList(db);
 
-    destroyLinkedList(db,destroyRequest);
+    destroyLinkedList(db,destroyRequest);*/
 
+    if(fork() == 0){
+        int fd1 = open("fifo",O_CREAT | O_RDONLY,0666);
+
+        char * f = malloc(40);
+
+        read(fd1,f,20);
+
+        printf("%s\n",f);
+
+        free(f);
+
+        close(fd1);
+    }
+    int fd = open("fifo",O_CREAT | O_RDWR,0666);
+
+    write(fd,"informação de teste",20);
+
+    close(fd);
 
     return 0;
 }

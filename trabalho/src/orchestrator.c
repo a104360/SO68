@@ -11,6 +11,9 @@
 #include <sys/time.h>
 
 static const char fifoComum[] = "../tmp/requestCenter";
+static const char completed[] = "../tmp/completed";
+static const char scheduled[] = "../tmp/schedule";
+static const char executing[] = "../tmp/executing";
 
 int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks sched-policy
 
@@ -22,14 +25,17 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
     }
     
     int numOfSons = atoi(argv[2]);
-
+    if(numOfSons <= 0) return -1;
+    
     // Inicializar o controlador
     int fdServerController[2];
     pipe(fdServerController);
     if(fork() == 0){
         
         /************************************************
+         * 
          * CÓDIGO RESPETIVO AO CONTROLLER
+         * 
         ***********************************************/
 
         // Fechar o descritor de escrita no pipe
@@ -37,16 +43,54 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
 
         // Inicializar a lista de queries em espera
         //LinkedList * queriesOnHold = createLinkedList(); 
+        /*int fdTaskCtrlFile[2];
+        pipe(fdTaskCtrlFile);
+        int fdControllerCtrlFile[2];
+        pipe(fdControllerCtrlFile);
+        if(fork() == 0){ 
+            /********************************************************
+             * 
+             * CÓGIDO RESPETIVO AO CONTROL FILE
+             * 
+            *********************************************************
+            close(fdTaskCtrlFile[1]);
+            close(fdControllerCtrlFile[1]);
+            int n = numOfSons;
+            while(1){
+                int buffer = 0;
+                if(fork() == 0){
+                    if(read)
+                }
+                if(read(fdTaskCtrlFile[0],&buffer,sizeof(int))){
+                    n++;
+                    writeTaskerStatus(n);
+                }
+            }
+
+            /********************************************************
+             * 
+             * FIM CONTROL FILE
+             * 
+            *********************************************************
+        }*/
+
+        int fdCompleted = open(completed,O_CREAT | O_RDWR | O_APPEND,0666);
+        int fdScheduled = open(scheduled,O_CREAT | O_RDWR | O_TRUNC,0666);
+        int fdExecuting = open(executing,O_CREAT | O_RDWR,0666);
+
 
         int fdControllerTasks[2];
         pipe(fdControllerTasks);
         
         /****************************************************
+         * 
          * Ciclo para os filhos que executam as tarefas
+         * 
         ***************************************************/
         for(int i = 0;i < numOfSons;i++){
             if(fork() == 0){
                 close(fdControllerTasks[1]);
+                //close(fdTaskCtrlFile[0]);
                 while(1){
                     //read()
                     // Primeiro verificar se existe algum request em espera
@@ -56,7 +100,7 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
                     //if(request == NULL)
                     request = fdReadRequest(fdControllerTasks[0]); // Bloqueado na leitura
                     
-
+                    //fdWriteRequest();
                     
                     // VERIFICAÇÃO PARA A MENSAGEM DE TURNOFF DO SERVIDOR
                     // O request para desligar deve possuir o id -404
@@ -64,6 +108,9 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
                     if(id == -404){
                         destroyRequest((void *)request);
                         close(fdControllerTasks[0]);
+                        close(fdCompleted);
+                        close(fdScheduled);
+                        close(fdExecuting); 
                         //destroyLinkedList(queriesOnHold,destroyRequest);
                         break;
                     }
@@ -123,9 +170,16 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
             Request * readBuffer;
             readBuffer = fdReadRequest(fdServerController[0]);
             fdWriteRequest(fdControllerTasks[1],readBuffer);
-            if(getRid(readBuffer) == -404){
+            int id = getRid(readBuffer);
+            if(id == -404){
                 destroyRequest(readBuffer);
+                close(fdCompleted);
+                close(fdScheduled);
+                close(fdExecuting); 
                 break;
+            }
+            if(id == -101){
+                //write
             }
             destroyRequest(readBuffer);
 
@@ -137,6 +191,9 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
         for(int i = 0;i < numOfSons;i++) wait(NULL);
         close(fdServerController[0]);
         close(fdControllerTasks[1]);
+        close(fdCompleted);
+        close(fdScheduled);
+        close(fdExecuting); 
         _exit(0);
 
 

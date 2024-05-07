@@ -3,15 +3,15 @@ libs = $(wildcard ../include/*.h)
 cflags = -g -I../include
 
 
-all: testll
+all: testList
 
 ../obj/parser.o: ../src/parser.c $(libs)
 	gcc $(cflags) -c $< -o $@
 
-../obj/request.o: ../src/request.c $(libs)
+../obj/linkedList.o: ../src/linkedList.c $(libs)
 	gcc $(cflags) -c $< -o $@
 
-../obj/linkedList.o: ../collections/linkedList.c $(libs)
+../obj/request.o: ../src/request.c ../obj/linkedList.o $(libs)
 	gcc $(cflags) -c $< -o $@
  
 testeParser.o: testeParser.c
@@ -32,5 +32,11 @@ testll.o: testLL.c $(libs)
 testll: ../obj/request.o ../obj/linkedList.o testll.o
 	gcc $^ -o $@
 
-clean: $(parser) $(testRequest) $(testll)
-	rm parser testRequest testll *.o ../obj/*.o
+testList.o: testList.c ../obj/request.o ../obj/parser.o ../obj/linkedList.o $(libs)
+	gcc $(cflags) -c $< -o $@
+
+testList: ../obj/request.o ../obj/linkedList.o ../obj/parser.o testList.o
+	gcc $^ -o $@
+
+clean:
+	rm -f parser testRequest testll testList *.o ../obj/*.o

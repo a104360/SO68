@@ -2,10 +2,13 @@
 #define REQUEST_H
 
 #include "parser.h"
+#include "linkedList.h"
 
 #define EXECUTE 5
 #define STATUS 2
 #define REQUESTMAXSIZE 300
+#define COMPLETEREQUESTSIZE 327
+#define NORMALREQUESTSIZE 315
 
 /// @brief Struct para definir um pedido do cliente
 typedef struct request Request;
@@ -97,5 +100,19 @@ void * copyRequest(Request *);
 /// @param  r2 Pointer para outro request
 /// @return r1 > r2 -> 1  |  r1 == r2 -> 0  |  r1 < r2 -> -1
 int compareRequest(void *,void *);
+
+char * requestToCompleteStatus(Request *,long);
+
+char * requestToNormalStatus(Request *);
+
+Request * statusToRequest(int);
+
+void writeStatusToUser(int,int,int,int);
+
+void reportCompletedRequest(Request *,long);
+
+void listToSchedule(LinkedList **);
+
+void updateScheduleFile(LinkedList *);
 
 #endif

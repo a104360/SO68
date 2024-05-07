@@ -150,3 +150,21 @@ void writeReply(int fd,int id){
     free(resposta);
 }
 
+
+void writeTaskerStatus(int n){
+    int fd = open("../tmp/controlFile",O_CREAT | O_RDWR | O_TRUNC,0666);
+    const int um = 1; 
+    while(n>0){
+        write(fd,&um,sizeof(int));
+        n--;
+    }
+    close(fd);
+}
+
+char * intToString(int n){
+    const int numSize = 12;
+    char * string = malloc(sizeof(char) * numSize);
+    memset(string,'\0',numSize);
+    snprintf(string,12,"%d",n);
+    return string;
+}
