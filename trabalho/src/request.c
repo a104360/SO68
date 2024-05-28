@@ -1,12 +1,11 @@
+
 #include "../include/request.h"
-#include "../include/linkedList.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include <sys/time.h>
 
 struct request {
     int id;
@@ -47,7 +46,7 @@ char * getRCommand(Request * request){
 
 // Função não deixa memory leaks
 void destroyRequest(void * request){
-    if(request) free(request);
+    free(request);
     request = NULL;
 }
 
@@ -124,7 +123,6 @@ void * copyRequest(Request * request){
 
 
 int compareRequest(void *a,void *b){
-    if(!a || !b) return -10;
     Request * r1 = (Request *) a;
     Request * r2 = (Request *) b;
 
@@ -143,14 +141,9 @@ void executeRequest(Request * request){
     int nCommands = countCommands(argv);
     Query *commands = parsePipe(argv);
     free(argv);
-    
+
     int oldPipe[2], newPipe[2];
     // Para cada comando, executar o ciclo
-    struct timeval * start;
-    struct timeval * end;
-    gettimeofday(start,NULL);
-
-
     for (int i = 0; i < nCommands; i++) {
         // Em todos os comandos, anteriores ao ultimo, cria-se um pipe
         if (i < nCommands - 1) {
@@ -186,139 +179,9 @@ void executeRequest(Request * request){
         }
 
         // Espera para que o comando execute
-        //wait(NULL);
-    }
-    // Wait for all child processes to prevent zombies
-    for (int i = 0; i < nCommands; i++) {
         wait(NULL);
     }
-    gettimeofday(end,NULL);
-    long duration = end->tv_usec - start->tv_usec;
+
     // Libertar memória da Query
     freeCmdPipeline(&commands);
-    reportCompletedRequest(request,duration);
-}
-
-
-char * requestToCompleteStatus(Request * r,long time){
-    int statusSize = COMPLETEREQUESTSIZE;
-    char * status = malloc(sizeof(char) * statusSize);
-    memset(status,'\0',statusSize);
-    snprintf(status,statusSize,"%d %s %d ms %ld ms\n",r->id,r->commands,r->time,time);
-    return status;
-}
-
-char * requestToNormalStatus(Request * r){
-    int statusSize = NORMALREQUESTSIZE;
-    char * status = malloc(sizeof(char) * statusSize);
-    memset(status,'\0',statusSize);
-    snprintf(status,statusSize,"%d %s %d ms\n",r->id,r->commands,r->time);
-    return status;
-}
-
-Request * statusToRequest(int fd){
-    char * string = malloc(NORMALREQUESTSIZE);
-    read(fd,string,NORMALREQUESTSIZE);
-    char * token = NULL;
-    char * saveptr = string;
-    token = strtok_r(string," ",&saveptr);
-    int id = atoi(token);
-    token = strtok_r(NULL," ",&saveptr);
-    char * comand = strdup(token);
-    token = strtok_r(NULL," ",&saveptr);
-    int time = atoi(token);
-    if(string) free(string);
-    Request * r = createRequest(id,time,comand);
-    free(comand);
-    return r;
-}
-
-
-static char * readCompleteStatus(int fd){
-    char * final = malloc(COMPLETEREQUESTSIZE * sizeof(char));
-    read(fd,final,COMPLETEREQUESTSIZE);
-    return final;
-}
-
-static char * readNormalStatus(int fd){
-    char * final = malloc(sizeof(char) * NORMALREQUESTSIZE);
-    read(fd,final,NORMALREQUESTSIZE);
-    return final;
-}
-
-
-void writeStatusToUser(int exec,int sched,int comp,int user){
-    char * r = NULL;
-    //Executing
-    if(exec > 0){
-        lseek(exec,0,SEEK_SET);
-        write(user,"Executing\n",sizeof(char) * 11);
-        while((r = readNormalStatus(exec))){
-            write(user,r,strlen(r));
-            free(r);
-            r = NULL;
-        }
-    }
-    //Scheduled
-    if(sched > 0){
-        lseek(sched,0,SEEK_SET);
-        write(user,"Scheduled\n",sizeof(char) * 11);
-        while((r = readNormalStatus(sched))){
-            write(user,r,strlen(r));
-            free(r);
-            r = NULL;
-        }
-    }
-    //Completed
-    if(comp > 0){
-        lseek(comp,0,SEEK_SET);
-        write(user,"Completed\n",sizeof(char) * 11);
-        while((r = readCompleteStatus(comp))){
-            write(user,r,strlen(r));
-            free(r);
-            r = NULL;
-        }
-    }
-}
-
-
-void reportCompletedRequest(Request * r,long time){
-    char * junction = requestToCompleteStatus(r,time);
-    int fd = open("../tmp/completed",O_CREAT | O_RDWR | O_APPEND,0666);
-    write(fd,junction,COMPLETEREQUESTSIZE);
-    free(junction);
-    close(fd);
-}
-
-void setRequestToExecuting(Request * r){
-    char * string = requestToNormalStatus(r);
-    int fd = open("../tmp/executing",O_CREAT | O_RDWR | O_APPEND,0666);
-    write(fd,string,NORMALREQUESTSIZE);
-    close(fd);
-}
-
-void listToSchedule(LinkedList ** l){
-    int fd = open("../tmp/schedule",O_CREAT | O_RDWR | O_TRUNC,0666);
-    while(*l){
-        Request * r = popFront(l,destroyRequest);
-        char * string = requestToNormalStatus(r);
-        destroyRequest(r);
-        write(fd,string,NORMALREQUESTSIZE);
-        free(string);
-        string = NULL;
-    }
-    close(fd);
-}
-
-
-void updateScheduleFile(LinkedList * l){
-    int fd = open("../tmp/schedule",O_RDWR,0666);
-    lseek(fd,0,SEEK_SET);
-    char * buffer = malloc(NORMALREQUESTSIZE);
-    Request * r = NULL;
-    while((r=statusToRequest(fd))){
-        orderInsert(&l,(void *)r,compareRequest);
-        destroyRequest(r);
-    }
-    close(fd);
 }
