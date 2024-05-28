@@ -95,8 +95,8 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
 
                     if(fork() == 0){
                         executeRequest(request);
-                        write(STDERR_FILENO,"Erro na execução do request\n",31);
-                        _exit(-1);
+                        //write(STDERR_FILENO,"Erro na execução do request\n",31);
+                        _exit(0);
                     }
 
                     // Libertar o pipeline;
@@ -122,11 +122,12 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
         while(1){
             Request * readBuffer;
             readBuffer = fdReadRequest(fdServerController[0]);
-            fdWriteRequest(fdControllerTasks[1],readBuffer);
             if(getRid(readBuffer) == -404){
+                for(int w = 0;w < numOfSons;w++) fdWriteRequest(fdControllerTasks[1],readBuffer);
                 destroyRequest(readBuffer);
                 break;
             }
+            fdWriteRequest(fdControllerTasks[1],readBuffer);
             destroyRequest(readBuffer);
 
 
@@ -165,6 +166,7 @@ int main(int argc,char ** argv){ // ./orchestrator output_folder parallel-tasks 
             free(reply);
             _exit(0);
         }
+        wait(NULL);
         fdWriteRequest(fdServerController[1],r);
         if(clientId == -404){
             destroyRequest(r);
