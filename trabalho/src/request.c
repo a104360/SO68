@@ -186,6 +186,10 @@ void executeRequest(Request * request){
         }
 
         // Espera para que o comando execute
+        //wait(NULL);
+    }
+    // Wait for all child processes to prevent zombies
+    for (int i = 0; i < nCommands; i++) {
         wait(NULL);
     }
     gettimeofday(end,NULL);
