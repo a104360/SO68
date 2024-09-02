@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "parser.h": "c",
-        "request.h": "c"
+        "request.h": "c",
+        "unistd.h": "c",
+        "wait.h": "c"
     }
 }

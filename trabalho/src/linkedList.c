@@ -2,16 +2,19 @@
 #include <stdio.h>
 #include "linkedList.h"
 #include "../include/request.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "linkedList.h"
 
-struct node{
-    void * obj;
-    struct node * next;
+struct node {
+    void *obj;
+    struct node *next;
 };
 
-LinkedList * createLinkedList(){
-    LinkedList * l = malloc(sizeof(struct node));
-    if(l == NULL){
-        perror("Não foi possivel criar a lista ligada");
+LinkedList *createLinkedList() {
+    LinkedList *l = malloc(sizeof(LinkedList));
+    if (l == NULL) {
+        perror("Failed to create the linked list");
         return NULL;
     }
 
@@ -20,80 +23,93 @@ LinkedList * createLinkedList(){
     return l;
 }
 
-void append(LinkedList * list,void * obj){
-    if(list->obj == NULL){
-        list->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+void append(LinkedList *list, void *obj, void *(*copy)(void *)) {
+
+    if(list == NULL) list = createLinkedList();
+
+    if (list->obj == NULL) {
+        list->obj = copy(obj);
         return;
     }
-    LinkedList * stream = list;
-    while(stream->next != NULL) stream = stream->next;
+    LinkedList *stream = list;
+    while (stream->next != NULL) stream = stream->next;
 
     stream->next = createLinkedList();
-
     stream = stream->next;
-    stream->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+    stream->obj = copy(obj);
 }
 
-void insert(LinkedList ** list,void * obj){
-    if((*list)->obj == NULL){
-        (*list)->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+void insert(LinkedList **list, void *obj, void *(*copy)(void *)) {
+    if ((*list)->obj == NULL) {
+        (*list)->obj = copy(obj);
         return;
     }
-    LinkedList * new = createLinkedList();
-
-    new->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+    LinkedList *new = createLinkedList();
+    new->obj = copy(obj);
     new->next = (*list);
     *list = new;
 }
 
-void orderInsert(LinkedList **l,void * obj,int (*cmp)(void *,void *)){
-    if(obj == NULL || l == NULL || cmp == NULL) return;
-    if((*l)->obj == NULL){
-        (*l)->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+void orderInsert(LinkedList **l, void *obj, int (*cmp)(void *, void *), void *(*copy)(void *)) {
+    if (obj == NULL || l == NULL || cmp == NULL) return;
+    if ((*l)->obj == NULL) {
+        (*l)->obj = copy(obj);
         return;
     }
-    if(cmp(obj,(*l)->obj) == -1){
-        LinkedList * newNode = createLinkedList();
-        newNode->obj = copyRequest((Request *)obj);
+    if (cmp(obj, (*l)->obj) == -1) {
+        LinkedList *newNode = createLinkedList();
+        newNode->obj = copy(obj);
         newNode->next = (*l);
         *l = newNode;
         return;
     } 
-    LinkedList * prev = (*l);
-    LinkedList * curr = (*l)->next;
-    while(curr && cmp(obj,curr->obj) == 1){ // Possivel otimização aqui
+    LinkedList *prev = (*l);
+    LinkedList *curr = (*l)->next;
+    while (curr && cmp(obj, curr->obj) == 1) { // Possible optimization here
         prev = curr;
         curr = curr->next;
     }
-    LinkedList * new = createLinkedList();
-    new->obj = copyRequest((Request *) obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
+    LinkedList *new = createLinkedList();
+    new->obj = copy(obj);
     new->next = curr;
     prev->next = new;
 }
 
-void * pop(LinkedList *l,void (*destroy)(void *)){
-    if(l->obj == NULL || l == NULL) return NULL;
-    LinkedList * stream = l;
-    while(stream->next->next != NULL){
+void *pop(LinkedList **l) {
+    if (*l == NULL || (*l)->obj == NULL) return NULL; // Check if the list is empty
+
+    if((*l)->next == NULL){
+        void * obj = (*l)->obj;
+        (*l)->obj = NULL;
+        return obj;
+    }
+
+    LinkedList *stream = *l;
+    LinkedList *prev = NULL;
+
+    while (stream->next != NULL) { // Traverse to the last node
+        prev = stream;
         stream = stream->next;
     }
-    LinkedList * aux = stream;
-    stream = stream->next;
-    void * obj = copyRequest((Request *) stream->obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
-    if(stream->obj){
-        destroy(stream->obj);
-        stream->obj = NULL;
+
+    void *obj = stream->obj; // Get the object to return
+
+    if (prev == NULL) { // If there's only one element in the list
+        *l = NULL;
+    } else {
+        prev->next = NULL;
     }
-    free(stream);
-    stream = NULL;
-    aux->next = NULL;
-    return obj;
+
+    free(stream); // Free the last node
+
+    return obj; // Return the object
 }
 
-void * popFront(LinkedList ** list,void(*destroy)(void*)){
-    if((*list)->obj == NULL || (*list) == NULL) return NULL;
-    void * obj = copyRequest((Request *) (*list)->obj); // TROCAR ESTA FUNÇÃO POR UMA GENERICA
-    LinkedList * aux = (*list);
+
+void *popFront(LinkedList **list, void (*destroy)(void *)) {
+    if ((*list)->obj == NULL || (*list) == NULL) return NULL;
+    void *obj = (*list)->obj;
+    LinkedList *aux = (*list);
     (*list) = (*list)->next;
     destroy(aux->obj);
     aux->next = NULL;
@@ -102,10 +118,10 @@ void * popFront(LinkedList ** list,void(*destroy)(void*)){
     return obj;
 }
 
-void destroyLinkedList(LinkedList * list,void (*destroy)(void *)){
-    while(list){
-        if(list->obj) destroy(list->obj);
-        LinkedList * aux = list;
+void destroyLinkedList(LinkedList *list, void (*destroy)(void *)) {
+    while (list) {
+        if (list->obj) destroy(list->obj);
+        LinkedList *aux = list;
         list = list->next;
         aux->next = NULL;
         free(aux);
@@ -113,11 +129,11 @@ void destroyLinkedList(LinkedList * list,void (*destroy)(void *)){
     }
 }
 
-void printLinkedList(LinkedList * list){
-    if(!list || !(list->obj)) return; 
-    LinkedList * stream = list;
-    while(stream){
-        printRequest((Request *) stream->obj);
+void printLinkedList(LinkedList *list, void (*print)(void *)) {
+    if (!list || !(list->obj)) return; 
+    LinkedList *stream = list;
+    while (stream) {
+        print(stream->obj);
         stream = stream->next;
     }
 }

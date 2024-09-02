@@ -32,7 +32,8 @@ void setRtime(Request * request,int time){
 }
 
 int getRid(Request * request){
-    return request->id;
+    if(request != NULL)return request->id;
+    return -1;
 }
 
 int getRtime(Request * request){
@@ -51,7 +52,8 @@ void destroyRequest(void * request){
 }
 
 void printRequest(Request * r){
-    printf("id : %d\ntime (usecs) : %d\ncommand : %s\n",r->id,r->time,r->commands);
+    if(r != NULL) printf("id : %d\ntime (usecs) : %d\ncommand : %s\n",r->id,r->time,r->commands);
+    else printf("Não exist request");
 }
 
 int writeRequest(const char * filename,Request * r){
