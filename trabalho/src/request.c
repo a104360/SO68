@@ -107,7 +107,8 @@ Request * readRequest(const char * filename){
 
 Request * fdReadRequest(int fd){    
     Request * r = malloc(sizeof(struct request));
-    if(read(fd,r,sizeof(struct request)) == -1){
+    ssize_t bytes = read(fd,r,sizeof(struct request));
+    if(bytes <= 0){
         perror("EOF encontrado");
         return NULL;
     }

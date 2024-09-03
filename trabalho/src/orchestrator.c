@@ -53,6 +53,7 @@ void checkAndExecute(char * argv,int max,LinkedList ** list){
             execute(argv,r); // Executar o request 
             _exit(0);
         }
+        printf("Processo %d a executar");
         executing++; // Aumentar o numero de processos a executar
         destroyRequest(r); // Destruir o request 
     }
